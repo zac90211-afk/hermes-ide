@@ -48,9 +48,9 @@ export const AI_PROVIDERS: AiProviderInfo[] = [
 		id: "copilot",
 		label: "Copilot",
 		description: "GitHub Copilot CLI",
-		installUrl: "https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line",
-		installCmd: "gh extension install github/gh-copilot",
-		authHint: "Run 'gh auth login' first, then install the extension",
+		installUrl: "https://docs.github.com/copilot/how-tos/copilot-cli",
+		installCmd: "gh copilot login",
+		authHint: "Copilot CLI is included with gh CLI. Run 'gh copilot login' to authenticate.",
 	},
 ];
 
@@ -126,7 +126,10 @@ export const PERMISSION_MODE_FLAGS: Record<string, Partial<Record<PermissionMode
 		bypassPermissions: { flag: "--yolo", description: "Execute commands and write files without prompts." },
 	},
 	copilot: {
-		default:           { flag: "", description: "Default behavior." },
+		default:           { flag: "", description: "Default behavior — asks before each action." },
+		acceptEdits:       { flag: "--allow-tool='write' --allow-tool='edit'", description: "Auto-approve file edits, still ask for shell commands." },
+		auto:              { flag: "--allow-all-tools", description: "Auto-approve all tools without confirmation." },
+		bypassPermissions: { flag: "--yolo", description: "Enable all permissions (tools, paths, URLs)." },
 	},
 };
 
