@@ -376,8 +376,20 @@ const commands: CommandEntry[] = [
   { command: "gh auth login", description: "Authenticate with GitHub", category: "gh", contexts: [] },
   { command: "gh auth status", description: "Show auth status", category: "gh", contexts: [] },
   { command: "gh api", description: "Make GitHub API request", category: "gh", contexts: ["git"] },
-  { command: "gh copilot suggest", description: "Get AI command suggestion", category: "gh", contexts: [] },
-  { command: "gh copilot explain", description: "Explain a command with AI", category: "gh", contexts: [] },
+
+  // ─── GitHub Copilot CLI ─────────────────────────────────────
+  { command: "copilot", description: "Start Copilot interactive chat", category: "copilot", contexts: [] },
+  { command: "copilot -p", description: "Execute Copilot prompt (non-interactive)", category: "copilot", contexts: [] },
+  { command: "copilot -i", description: "Start interactive mode with initial prompt", category: "copilot", contexts: [] },
+  { command: "copilot --continue", description: "Resume most recent Copilot session", category: "copilot", contexts: [] },
+  { command: "copilot init", description: "Initialize Copilot instructions (AGENTS.md)", category: "copilot", contexts: [] },
+  { command: "copilot login", description: "Authenticate with Copilot", category: "copilot", contexts: [] },
+  { command: "copilot --help", description: "Show Copilot CLI help", category: "copilot", contexts: [] },
+  { command: "copilot --model", description: "Specify AI model to use", category: "copilot", contexts: [] },
+  { command: "copilot --allow-all-tools", description: "Auto-approve all tools", category: "copilot", contexts: [] },
+  { command: "copilot --yolo", description: "Enable all permissions", category: "copilot", contexts: [] },
+  { command: "gh copilot suggest", description: "Get AI command suggestion (legacy)", category: "gh", contexts: [] },
+  { command: "gh copilot explain", description: "Explain a command with AI (legacy)", category: "gh", contexts: [] },
 
   // ─── GitLab CLI ─────────────────────────────────────────────
   { command: "glab mr create", description: "Create merge request", category: "glab", contexts: ["git"] },

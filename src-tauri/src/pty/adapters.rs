@@ -1152,8 +1152,24 @@ pub(crate) struct CopilotAdapter;
 impl ProviderAdapter for CopilotAdapter {
     fn detect_agent(&self, line: &str) -> Option<AgentInfo> {
         let lower = line.to_lowercase();
-        // "GitHub Copilot", "gh copilot", "copilot cli", or copilot coding agent
-        if lower.contains("github copilot") || lower.contains("gh copilot") {
+        // "GitHub Copilot", "gh copilot", "copilot cli", or just "copilot"
+        if lower.contains("github copilot") {
+            // Try to extract model from startup message
+            let model = if line.contains("gpt-4") || line.contains("GPT-4") {
+                Some("gpt-4".to_string())
+            } else if line.contains("gpt-3.5") || line.contains("GPT-3.5") {
+                Some("gpt-3.5-turbo".to_string())
+            } else {
+                None
+            };
+            Some(AgentInfo {
+                name: "Copilot CLI".into(),
+                provider: "github".into(),
+                model,
+                detected_at: now(),
+                confidence: 0.95,
+            })
+        } else if lower.contains("gh copilot") || lower.starts_with("copilot") {
             Some(AgentInfo {
                 name: "Copilot CLI".into(),
                 provider: "github".into(),
@@ -1162,7 +1178,7 @@ impl ProviderAdapter for CopilotAdapter {
                 confidence: 0.9,
             })
         } else if lower.contains("copilot")
-            && (lower.contains("cli") || lower.contains("agent") || lower.contains("coding"))
+            && (lower.contains("cli") || lower.contains("agent") || lower.contains("coding") || lower.contains("session"))
         {
             Some(AgentInfo {
                 name: "Copilot CLI".into(),
@@ -1181,8 +1197,26 @@ impl ProviderAdapter for CopilotAdapter {
         let now_str = now();
         let lower = line.to_lowercase();
 
-        // Detect suggestions: "Suggestion:" or "Command:" output from gh copilot suggest
-        if lower.starts_with("suggestion:") || lower.starts_with("command:") {
+        // Detect when Copilot starts processing
+        if lower.contains("thinking") || lower.contains("analyzing") || lower.contains("processing") {
+            result.phase_hint = Some(PhaseHint::Thinking);
+        }
+        // Detect tool usage
+        else if lower.contains("executing") || lower.contains("running command") || lower.contains("writing to file") {
+            result.action = Some(ActionEvent {
+                label: "Tool Use".into(),
+                command: line.to_string(),
+                provider: "copilot".into(),
+                is_suggestion: false,
+                timestamp: now_str.clone(),
+            });
+        }
+        // Detect completion/success messages
+        else if lower.contains("completed") || lower.contains("finished") || lower.contains("done") {
+            result.phase_hint = Some(PhaseHint::WorkComplete);
+        }
+        // Detect suggestions: "Suggestion:" or "Command:" output (legacy format)
+        else if lower.starts_with("suggestion:") || lower.starts_with("command:") {
             result.action = Some(ActionEvent {
                 label: "Suggestion".into(),
                 command: line.to_string(),
@@ -1202,8 +1236,11 @@ impl ProviderAdapter for CopilotAdapter {
             });
         }
 
-        // Input-needed: selection prompts or confirmation prompts
-        if (line.starts_with("? ") && line.len() < 100) || is_input_needed_line(line) {
+        // Input-needed: selection prompts, confirmation prompts, or permission requests
+        if (line.starts_with("? ") && line.len() < 100)
+            || is_input_needed_line(line)
+            || lower.contains("allow") && (lower.contains("(y/n)") || lower.contains("[y/n]"))
+            || lower.contains("permission") && lower.contains("?") {
             result.phase_hint = Some(PhaseHint::InputNeeded);
         }
         // Regular prompt detection
@@ -1216,8 +1253,8 @@ impl ProviderAdapter for CopilotAdapter {
 
     fn is_prompt(&self, line: &str) -> bool {
         let t = line.trim();
-        // Copilot interactive prompts start with "?" or "> "
-        if t.starts_with("? ") || t.starts_with("> ") {
+        // Copilot interactive prompts start with "?" or "> " or "copilot>"
+        if t.starts_with("? ") || t.starts_with("> ") || t.starts_with("copilot>") {
             return true;
         }
         is_shell_prompt(t)
@@ -1226,16 +1263,46 @@ impl ProviderAdapter for CopilotAdapter {
     fn known_actions(&self) -> Vec<ActionTemplate> {
         vec![
             ActionTemplate {
-                command: "gh copilot suggest".into(),
-                label: "Suggest".into(),
-                description: "Get command suggestions".into(),
+                command: "copilot".into(),
+                label: "Chat".into(),
+                description: "Start interactive chat mode".into(),
                 category: "AI".into(),
             },
             ActionTemplate {
-                command: "gh copilot explain".into(),
-                label: "Explain".into(),
-                description: "Explain a command".into(),
+                command: "copilot -p".into(),
+                label: "Prompt".into(),
+                description: "Execute a one-shot prompt".into(),
                 category: "AI".into(),
+            },
+            ActionTemplate {
+                command: "copilot -i".into(),
+                label: "Interactive Prompt".into(),
+                description: "Start interactive mode with initial prompt".into(),
+                category: "AI".into(),
+            },
+            ActionTemplate {
+                command: "copilot init".into(),
+                label: "Init".into(),
+                description: "Initialize Copilot instructions (AGENTS.md)".into(),
+                category: "Setup".into(),
+            },
+            ActionTemplate {
+                command: "copilot --continue".into(),
+                label: "Continue".into(),
+                description: "Resume most recent session".into(),
+                category: "Session".into(),
+            },
+            ActionTemplate {
+                command: "copilot login".into(),
+                label: "Login".into(),
+                description: "Authenticate with Copilot".into(),
+                category: "Setup".into(),
+            },
+            ActionTemplate {
+                command: "copilot --help".into(),
+                label: "Help".into(),
+                description: "Show Copilot CLI help".into(),
+                category: "Info".into(),
             },
         ]
     }
