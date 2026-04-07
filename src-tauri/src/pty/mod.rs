@@ -208,7 +208,7 @@ pub(crate) fn ai_launch_command(
         "aider" => "aider",
         "codex" => "codex",
         "gemini" => "gemini",
-        "copilot" => return Some(format_with_suffix("gh copilot", custom_suffix)),
+        "copilot" => "copilot",
         _ => return None,
     };
     let mut cmd = base.to_string();
@@ -223,6 +223,9 @@ pub(crate) fn ai_launch_command(
         ("codex", "auto") => " --full-auto",
         ("codex", "bypassPermissions") => " --dangerously-bypass-approvals-and-sandbox",
         ("gemini", "bypassPermissions") => " --yolo",
+        ("copilot", "acceptEdits") => " --allow-tool='write' --allow-tool='edit'",
+        ("copilot", "auto") => " --allow-all-tools",
+        ("copilot", "bypassPermissions") => " --yolo",
         _ => "",
     };
     cmd.push_str(flag);
@@ -661,7 +664,7 @@ mod tests {
         );
         assert_eq!(
             ai_launch_command("copilot", "default", ""),
-            Some("gh copilot".into())
+            Some("copilot".into())
         );
         assert_eq!(ai_launch_command("unknown", "default", ""), None);
     }
@@ -716,11 +719,18 @@ mod tests {
             Some("gemini --yolo".into())
         );
 
-        // Unsupported modes fall back to no flag
-        assert_eq!(ai_launch_command("aider", "plan", ""), Some("aider".into()));
+        // Copilot supports permission modes
+        assert_eq!(
+            ai_launch_command("copilot", "auto", ""),
+            Some("copilot --allow-all-tools".into())
+        );
         assert_eq!(
             ai_launch_command("copilot", "bypassPermissions", ""),
-            Some("gh copilot".into())
+            Some("copilot --yolo".into())
+        );
+        assert_eq!(
+            ai_launch_command("copilot", "acceptEdits", ""),
+            Some("copilot --allow-tool='write' --allow-tool='edit'".into())
         );
     }
 

@@ -80,8 +80,11 @@ const DEFAULT_ACTIONS: Record<string, ActionTemplate[]> = {
     { command: "/logout", label: "Logout", description: "Log out of Codex", category: "Setup" },
   ],
   copilot: [
-    { command: "gh copilot suggest", label: "Suggest", description: "Get command suggestions", category: "AI" },
-    { command: "gh copilot explain", label: "Explain", description: "Explain a command", category: "AI" },
+    { command: "copilot", label: "Chat", description: "Start interactive chat mode", category: "AI" },
+    { command: "copilot -p", label: "Prompt", description: "Execute a one-shot prompt", category: "AI" },
+    { command: "copilot init", label: "Init", description: "Initialize Copilot instructions (AGENTS.md)", category: "Setup" },
+    { command: "copilot --continue", label: "Continue", description: "Resume most recent session", category: "Session" },
+    { command: "copilot --help", label: "Help", description: "Show Copilot CLI help", category: "Info" },
   ],
 };
 
@@ -91,7 +94,7 @@ const PINNED_DEFAULTS: Record<string, string[]> = {
   gemini: ["/clear", "/help", "/stats", "/tools"],
   aider: ["/add", "/run", "/test", "/commit", "/undo"],
   codex: ["/compact", "/clear", "/diff", "/review", "/status"],
-  copilot: ["gh copilot suggest", "gh copilot explain"],
+  copilot: ["copilot", "copilot init", "copilot --continue", "copilot -p", "copilot --help"],
 };
 
 const MAX_QUICK_ACTIONS = 5;
